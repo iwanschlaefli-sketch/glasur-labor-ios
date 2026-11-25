@@ -1,0 +1,5 @@
+build/
+android-sdk
+*.keystore
+*.idsig
+*.apk
