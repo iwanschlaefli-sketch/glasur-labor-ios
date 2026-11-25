@@ -23,7 +23,7 @@ Updates lassen sich nur über die installierte App spielen, wenn sie mit **demse
 ## Seite aktualisieren
 Neue Version des Artefakts nach `assets/index.html` übernehmen, dabei die drei Anpassungen beibehalten: lokale Skript-/Schrift-Pfade, `Android.copy` und `Android.savePdf`. Danach `versionCode` im Manifest erhöhen und `./build.sh` ausführen.
 
-## Web-App für iPhone/iPad (`web/`)
+## Web-App für iPhone/iPad (`docs/`)
 Dieselbe Seite als installierbare Web-App: funktioniert nach dem ersten Öffnen offline (`sw.js`), PDF-Export über das Teilen-Menü.
-Auf einem HTTPS-Host (z. B. GitHub Pages) veröffentlichen, in Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.
-Nach Änderungen an Dateien in `web/` die `VERSION` in `web/sw.js` erhöhen, damit installierte Apps die neue Fassung laden.
+Wird über GitHub Pages (Branch `main`, Ordner `/docs`) veröffentlicht, in Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.
+Nach Änderungen an Dateien in `docs/` die `VERSION` in `docs/sw.js` erhöhen, damit installierte Apps die neue Fassung laden.
