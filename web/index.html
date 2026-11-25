@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Glasur-Labor"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)">
+<title>Glasur-Labor</title>
+
+<style>
+@font-face{font-family:Outfit;font-weight:400 600;font-display:swap;src:url(outfit-latinext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+20A0-20AB,U+20AD-20C4,U+2C60-2C7F}
+@font-face{font-family:Outfit;font-weight:400 600;font-display:swap;src:url(outfit-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212}
+/* VOICE: ruhig, werkstattnah, präzise
+   IDEA: das Testbrett im Atelier – jede Schicht ein Eintrag im Brennbuch
+   PICTURE: das Gefäss selbst, gross und drehbar; beim Brennen läuft die Glasur sichtbar
+   COLOUR and TYPE: Weiss, Tinte, Steinzeug-Grau, Seladon-Grün als einziger Akzent; Outfit
+   LAYOUT: Bühne links (oben auf dem Handy), Werkbank rechts (darunter) */
+:root{color-scheme:light dark;--bg:light-dark(#fbfaf7,#141311);--ink:light-dark(#1c1a17,#ece8e1);--mute:light-dark(#6b655c,#a39c91);--line:light-dark(#e4dfd6,#2f2c28);--card:light-dark(#fff,#1c1a17);--stage:light-dark(#e8e3da,#22201c);--stage2:light-dark(#d6cfc3,#151412);--acc:light-dark(#3d6b5c,#86b9a8);--accInk:light-dark(#fff,#0e1a15);--warn:light-dark(#9c3a1d,#f0916f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Outfit,system-ui,sans-serif;overflow-x:clip}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 410px;min-height:100vh}
+.stage{position:sticky;top:0;height:100vh;background:radial-gradient(120% 90% at 50% 35%,var(--stage),var(--stage2));overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.hud{position:absolute;left:20px;top:calc(16px + env(safe-area-inset-top));right:20px;pointer-events:none}
+h1{font-size:34px;line-height:1.05;margin:0;font-weight:600;letter-spacing:-.01em}
+#state{margin:4px 0 0;color:var(--mute);font-size:15px}
+.bottom{position:absolute;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;pointer-events:none}.bottom>*{pointer-events:auto}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,select{font:inherit;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.primary{background:var(--acc);color:var(--accInk);border-color:var(--acc);font-weight:600;padding:0 22px}
+.warn{margin:0;max-height:30%;overflow:auto;padding:10px 14px;border-radius:10px;background:var(--card);color:var(--warn);border:1px solid var(--warn);font-size:15px}
+.panel{border-left:1px solid var(--line);padding:8px 20px calc(40px + env(safe-area-inset-bottom))}
+.panel section{padding:16px 0;border-bottom:1px solid var(--line)}
+h2{font-size:17px;margin:0 0 10px;font-weight:600}h2 small{font-weight:400;color:var(--mute);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-height:40px;padding:0 12px;font-size:15px}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pe{position:relative;height:220px;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.pe canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.hint{color:var(--mute);font-size:14px;margin:8px 0 0}
+#layers{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
+#layers li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px 8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px}
+.sw{width:28px;height:28px;border-radius:50%;border:1px solid var(--line)}
+#layers select{width:100%;min-height:40px;padding:0 8px;font-size:15px}
+.row2{grid-column:2/4;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.row2 select{flex:1 1 140px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:40px;min-width:40px;padding:0 8px;font-size:15px}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.del{min-height:40px;min-width:40px;padding:0;color:var(--mute)}
+pre{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 8px;font:15px/1.6 Outfit,sans-serif;white-space:pre-wrap}
+.note{color:var(--mute);font-size:13px;margin:16px 0 0}
+.temp{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.temp b{font-size:28px;font-weight:600;white-space:nowrap}.temp span{color:var(--mute);white-space:nowrap}
+input[type=range]{width:100%;height:44px;accent-color:var(--acc)}
+.gbtn{width:100%;text-align:left;min-height:44px;padding:4px 10px;line-height:1.25;font-size:15px}.gbtn small{display:block;color:var(--mute);font-size:13px}
+.rng{font-size:13px;color:var(--mute)}.rng.bad{color:var(--warn)}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--bg);color:var(--ink);padding:0;width:min(560px,96vw);max-height:88vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.pk{display:flex;flex-direction:column;max-height:88vh}.pk header{padding:14px 14px 8px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.pk input[type=search]{font:inherit;font-size:16px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);width:100%}
+.pk label{font-size:14px;color:var(--mute);display:flex;gap:8px;align-items:center;min-height:32px}
+#plist{overflow:auto;padding:6px 8px 12px;display:grid;gap:4px}
+#plist button{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;border-color:transparent;padding:6px 8px;min-height:48px}
+#plist button:hover{border-color:var(--line)}#plist .sw{width:30px;height:30px}#plist small{color:var(--mute);font-size:13px;display:block}#plist em{font-style:normal;font-size:12px;color:var(--mute);white-space:nowrap}
+.pk footer{padding:8px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--mute);font-size:13px}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr)}.stage{position:relative;height:60vh;min-height:380px}.panel{border-left:0}h1{font-size:28px}}
+</style></head><body>
+<div class="app">
+<section class="stage">
+  <canvas id="gl" aria-label="3D-Vorschau des Gefässes, zum Drehen ziehen"></canvas>
+  <div class="hud"><h1>Glasur-Labor</h1><p id="state">Roh</p></div>
+  <div class="bottom"><p id="warn" class="warn" role="status" hidden></p>
+  <div class="actions"><button id="fire" class="primary">Brennen</button><button id="reroll">Anderer Brand</button><button id="raw">Roh zeigen</button></div></div>
+</section>
+<aside class="panel">
+  <section><h2>Vorlagen <small>aus den Stories</small></h2><div class="chips" id="presets"></div></section>
+  <section><h2>Form <small>Punkte ziehen</small></h2><div class="chips" id="shapes"></div><div class="pe"><canvas id="pe" aria-label="Profil-Editor"></canvas></div><p class="hint" id="dims"></p></section>
+  <section><h2>Brand <small>Oxidation, ca. 60 °C/h am Ende</small></h2><div class="temp"><b id="tval">1222 °C</b><span id="tcone">≈ Cone 6</span></div>
+  <input type="range" id="temp" min="880" max="1310" step="5" value="1222" aria-label="Brenntemperatur in Grad Celsius">
+  <div class="chips" id="tpre"></div><p class="hint" id="tinfo"></p></section>
+  <section><h2>Ton</h2><div class="chips" id="clays"></div></section>
+  <section><h2>Glasurschichten <small>von unten nach oben</small></h2><ol id="layers"></ol><button id="add">+ Schicht</button><p class="hint" id="ginfo"></p></section>
+  <section><h2>Rezept</h2><pre id="recipe"></pre><div class="actions"><button id="pdf" class="primary">PDF exportieren</button><button id="copy">Text kopieren</button></div><p class="hint" id="pdfmsg">PDF mit 3D-Ansichten, Rezept und Materialliste.</p></section>
+  <p class="note" id="dbnote">Demo. Glasurliste nach Mayco Color Guide 2026, AMACO Complete Guide und BOTZ-Katalog 2021, ohne Engoben und Unterglasuren. Farben der meisten Glasuren sind aus dem Namen abgeleitet (Kennzeichnung „geschätzt“), nur wenige sind von Hand nach Herstellerbeschreibung eingestellt. Brennbereiche nach Hersteller, Verhalten ausserhalb davon ist modelliert. Testplättchen ersetzt das nicht.</p>
+</aside>
+</div>
+<dialog id="pick"><div class="pk"><header><input type="search" id="q" placeholder="Name oder Nummer suchen, z. B. Shino, PC-20, 9866" aria-label="Glasur suchen">
+<div class="chips" id="pbrands"></div><label><input type="checkbox" id="pfit" checked> nur passend zur Brenntemperatur</label></header>
+<div id="plist"></div><footer><span id="pcount"></span><button id="pclose">Schliessen</button></footer></div></dialog>
+<script src="three.min.js"></script>
+<script src="jspdf.umd.min.js"></script>
+<script>{
+const $=id=>document.getElementById(id);
+if(!window.THREE){$('state').textContent='3D konnte nicht geladen werden.';throw 0}
+const CORE=[
+{k:'Mayco|SW-122',b:'Mayco',c:'SW-122',n:'Maycoshino',l:'Stoneware',t:[1196,1305],thin:[146,74,36],thick:[234,216,188],op:.9,fl:.12,fin:'g',fx:'',src:'h',info:'Eisenglasur: dünn sattes Eisenbraun, dick helle Cremetöne wie ein Shino. Bricht an Kanten braun.'},
+{k:'Mayco|SW-203',b:'Mayco',c:'SW-203',n:'Root Beer',l:'Stoneware Translucent',t:[1196,1305],thin:[150,86,42],thick:[72,34,16],op:.5,fl:.25,fin:'g',fx:'',src:'h',info:'Transparentes, glänzendes Braun. Mehr Schichten = dunkler; dick aufgetragen etwas beweglich.'},
+{k:'Mayco|SW-130',b:'Mayco',c:'SW-130',n:'Copper Jade',l:'Stoneware',t:[1196,1305],thin:[196,170,120],thick:[74,88,58],op:.75,fl:.22,fin:'g',fx:'',src:'h',info:'Glänzend, von Braungrün bis cremigem Hellbraun; bricht dunkel.'},
+{k:'Mayco|SW-253',b:'Mayco',c:'SW-253',n:'Green Opal',l:'Stoneware Opal',t:[1196,1305],thin:[178,184,86],thick:[88,140,98],op:.6,fl:.28,fin:'g',fx:'',src:'h',info:'Leuchtendes Gelbgrün; dick bildet sich ein grüner Schwimmer.'},
+{k:'Mayco|SW-173',b:'Mayco',c:'SW-173',n:'Amber Quartz',l:'Stoneware',t:[1196,1305],thin:[206,138,66],thick:[132,66,24],op:.55,fl:.25,fin:'g',fx:'',src:'h'},
+{k:'Mayco|SW-401',b:'Mayco',c:'SW-401',n:'Light Flux',l:'Stoneware Flux',t:[1196,1305],thin:[242,236,224],thick:[238,230,214],op:.12,fl:2.4,fin:'g',fx:'',src:'h',info:'Fliessmittel: lässt Glasuren darunter und darüber laufen. Unteres Drittel frei lassen.'},
+{k:'Mayco|SW-402',b:'Mayco',c:'SW-402',n:'Dark Flux',l:'Stoneware Flux',t:[1196,1305],thin:[96,70,48],thick:[46,32,22],op:.3,fl:2.4,fin:'g',fx:'',src:'h',info:'Dunkles Fliessmittel: Bewegung plus dunklere Tiefen. Unteres Drittel frei lassen.'}];
+let G=CORE.slice(),GI={};const index=()=>{GI={};G.forEach(g=>GI[g.k]=g)};index();
+const gk=k=>GI[k]||GI['Mayco|SW-122'];
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CONES=[['010',887],['09',915],['08',945],['07',973],['06',999],['05',1046],['04',1060],['03',1101],['02',1120],['01',1137],['1',1154],['2',1162],['3',1168],['4',1186],['5',1196],['6',1222],['7',1240],['8',1263],['9',1280],['10',1305]];
+const TPRE=[['Raku',960],['Irdenware',1050],['Cone 6',1222],['Steinzeug 1250',1250],['Cone 10',1305]];
+let TEMP=1222;
+function coneOf(t){let b=CONES[0];for(const c of CONES)if(Math.abs(c[1]-t)<Math.abs(b[1]-t))b=c;return b[0]}
+function resp(g){const[a,b]=g.t,T=TEMP,mat=Math.min(1,Math.max(0,(T-(a-90))/90));let f=g.fl*(.75+.25*Math.min(1,Math.max(0,(T-a)/Math.max(b-a,20))));
+if(T>b)f*=Math.exp((T-b)/35);return{mat,flow:Math.min(12,f*mat),over:Math.max(0,T-b),under:Math.max(0,a-T)}}
+function rstate(g){const r=resp(g);return r.under>0?(r.mat<.3?'roh':'unterbrannt'):r.over>60?'stark überbrannt':r.over>0?'überbrannt':'ok'}
+const AREAS=[['all','Ganz (getaucht)'],['top','Oberes Drittel'],['rim','Rand'],['dabs','Tupfer'],['strokes','Pinselstriche']];
+const CLAYS=[['Weisses Steinzeug',[236,229,216],0],['Gesprenkelt',[226,212,192],1],['Heller Buff',[214,188,152],0],['Brauner Ton',[128,88,62],0]];
+const SHAPES={Becher:[[3.2,0],[3.4,2],[3.7,4.5],[4,6.5],[4.2,8]],Tumbler:[[3.2,0],[3.4,3.5],[3.6,7],[3.8,10],[3.9,12]],Schale:[[3,0],[5.2,1.4],[7,2.8],[8.3,4.2],[9,5.4]],Vase:[[3.4,0],[5.6,4],[4.6,9],[2.6,13],[3.3,16]]};
+const L=(g,coats,area,seed)=>({g,coats,area,seed});
+const M='Mayco|';const PRESETS={'Drift Wood':[L(M+'SW-122',3,'all',11),L(M+'SW-203',2,'dabs',23),L(M+'SW-130',1,'dabs',37),L(M+'SW-401',2,'top',41)],
+'Light Amber Tide':[L(M+'SW-122',3,'all',5),L(M+'SW-253',2,'strokes',17),L(M+'SW-173',2,'rim',29),L(M+'SW-401',1,'top',31)],
+'Earth and Sand':[L(M+'SW-122',3,'all',7),L(M+'SW-203',2,'strokes',53),L(M+'SW-402',2,'top',61)]};
+const W=256,NR=220,STEPS=120,K=.05,T0=2,WALL=.45;
+let shapeName='Becher',pts=SHAPES.Becher.map(p=>p.slice()),layers=PRESETS['Drift Wood'].map(o=>({...o})),preset='Drift Wood',clay=1,fSeed=1;
+let RR,DS=1,Y,SIDE,DOWN,STEEP,Hc,maxR,RATE,LAT,VAR,SPK,SPK2,Lraw=[],S=[],Dl=[],shelf=0,fired=false,stepsLeft=0;
+const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+function hash(i,j,s){let h=(i*374761393+j*668265263+s*982451653)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
+function vn(x,y,px,s){const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy),m=a=>((a%px)+px)%px;
+const a=hash(m(xi),yi,s),b=hash(m(xi+1),yi,s),c=hash(m(xi),yi+1,s),d=hash(m(xi+1),yi+1,s);return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy}
+function fbm(u,v,fu,fv,s){let t=0,a=.5,f=1;for(let o=0;o<4;o++){t+=a*vn(u*fu*f,v*fv*f,fu*f,s+o);a*=.5;f*=2}return t/.9375}
+function catmull(P,n){const o=[];for(let k=0;k<P.length-1;k++){const p0=P[Math.max(k-1,0)],p1=P[k],p2=P[k+1],p3=P[Math.min(k+2,P.length-1)];
+for(let s=0;s<n;s++){const t=s/n,t2=t*t,t3=t2*t;o.push([0,1].map(d=>.5*(2*p1[d]+(-p0[d]+p2[d])*t+(2*p0[d]-5*p1[d]+4*p2[d]-p3[d])*t2+(-p0[d]+3*p1[d]-3*p2[d]+p3[d])*t3)))}}o.push(P[P.length-1].slice());return o}
+function buildPath(){const outer=catmull(pts,24);Hc=outer[outer.length-1][1];maxR=Math.max(...outer.map(p=>p[0]));const FLOOR=.6,inner=[];
+for(let k=outer.length-1;k>=0;k--){const a=outer[Math.max(k-1,0)],b=outer[Math.min(k+1,outer.length-1)],dr=b[0]-a[0],dh=b[1]-a[1],l=Math.hypot(dr,dh)||1;const p=[outer[k][0]-dh/l*WALL,outer[k][1]+dr/l*WALL];if(p[1]<FLOOR||p[0]<.05)break;inner.push(p)}
+const o=outer[outer.length-1],q=inner[0],c=[(o[0]+q[0])/2,(o[1]+q[1])/2],R=Math.hypot(o[0]-q[0],o[1]-q[1])/2,e=[(o[0]-c[0])/R,(o[1]-c[1])/R],up=[-e[1],e[0]],rim=[];
+for(let k=1;k<8;k++){const a=Math.PI*k/8;rim.push([c[0]+R*(Math.cos(a)*e[0]+Math.sin(a)*up[0]),c[1]+R*(Math.cos(a)*e[1]+Math.sin(a)*up[1])])}
+const last=inner[inner.length-1];const path=[...outer,...rim,...inner,[Math.max(last[0]-.25,.05),FLOOR],[0,FLOOR]];
+const cum=[0];for(let k=1;k<path.length;k++)cum.push(cum[k-1]+Math.hypot(path[k][0]-path[k-1][0],path[k][1]-path[k-1][1]));
+const sOut=cum[outer.length-1],sRim=cum[outer.length+rim.length],Lt=cum[cum.length-1],ds=Lt/(NR-1),P=[];Y=new Float32Array(NR);SIDE=new Uint8Array(NR);DOWN=new Int16Array(NR);STEEP=new Float32Array(NR);
+DS=ds;RR=new Float32Array(NR);let k=1;for(let j=0;j<NR;j++){const s=j*ds;while(k<path.length-1&&cum[k]<s)k++;const t=Math.min(1,Math.max(0,(s-cum[k-1])/((cum[k]-cum[k-1])||1)));const x=path[k-1][0]+(path[k][0]-path[k-1][0])*t,y=path[k-1][1]+(path[k][1]-path[k-1][1])*t;
+P.push(new THREE.Vector2(Math.max(0,x),y));RR[j]=Math.max(0,x);Y[j]=y;SIDE[j]=s<=sOut?0:s<=sRim?1:2}
+for(let j=0;j<NR;j++){if(j===0){DOWN[0]=-2;STEEP[0]=1;continue}let nb=-1,lo=Y[j]-1e-4;if(Y[j-1]<lo){nb=j-1;lo=Y[j-1]}if(j<NR-1&&Y[j+1]<lo)nb=j+1;DOWN[j]=nb;STEEP[j]=nb<0?0:Math.min(1,(Y[j]-Y[nb])/ds)}
+return P}
+function fields(){RATE=new Float32Array(W*NR);LAT=new Int8Array(W*NR);VAR=new Float32Array(W*NR);SPK=new Uint8Array(W*NR);SPK2=new Uint8Array(W*NR);
+for(let j=0;j<NR;j++){const v=j/NR*1.6;for(let i=0;i<W;i++){const u=i/W,c=j*W+i;RATE[c]=.3+1.4*fbm(u,v,20,2,fSeed);const n=fbm(u,v,14,4,fSeed+9);LAT[c]=n>.7?1:n<.3?-1:0;VAR[c]=fbm(u,v,24,10,fSeed+50);SPK[c]=hash(i,j,77)<.014?1:0;SPK2[c]=hash(i,j,91)<.03?1:0}}}
+const VC={};function varCache(sd){if(VC[sd])return VC[sd];const a=new Float32Array(W*NR);for(let j=0;j<NR;j++)for(let i=0;i<W;i++)a[j*W+i]=fbm(i/W,j/NR*1.6,6,6,sd+3);return VC[sd]=a}
+function deposit(){Lraw=layers.map(ly=>{const a=new Float32Array(W*NR),r=mul(ly.seed),vc=varCache(ly.seed),dabs=[],str=[];
+for(let k=0;k<11;k++)dabs.push([r(),.45+.5*r(),.03+.035*r(),.1+.12*r()]);for(let k=0;k<4;k++)str.push([k/4+r()*.12,.04+.035*r(),(r()-.5)*.5]);
+for(let j=0;j<NR;j++){const v=Y[j]/Hc,sd=SIDE[j],wax=sd===0&&Y[j]<Math.max(.5,Hc*.06);if(wax)continue;
+for(let i=0;i<W;i++){const u=i/W,n=ly.area==='all'?.5:fbm(u,v,8,3,ly.seed);let m=0;
+if(ly.area==='all')m=1;else if(ly.area==='top')m=(sd===0?v>.6+.18*(n-.5):Y[j]>Hc*.82)?1:0;else if(ly.area==='rim')m=Y[j]>Hc*(.86+.08*(n-.5))?1:0;
+else if(ly.area==='dabs'&&sd===0){for(const d of dabs){let du=Math.abs(u-d[0]);du=Math.min(du,1-du);const q=(du/d[2])**2+((v-d[1])/d[3])**2+.5*(n-.5);if(q<1)m=Math.max(m,Math.min(1,(1-q)*2.5))}}
+else if(ly.area==='strokes'&&sd===0&&v>.12&&v<.97){for(const s of str){let du=u-(s[0]+s[2]*(v-.5));du=((du%1)+1)%1;du=Math.min(du,1-du);const e=du+.03*(n-.5);if(e<s[1])m=Math.max(m,Math.min(1,(s[1]-e)/(s[1]*.35)))}}
+if(m>0)a[j*W+i]=m*ly.coats*(.82+.36*vc[j*W+i])}}return a});Dl=Lraw.map(()=>new Float32Array(W*NR))}
+const TT=new Float32Array(W*NR),MM=new Float32Array(W*NR);
+function step(){const n=W*NR,nl=S.length,FE=layers.map(l=>resp(gk(l.g)).flow);TT.fill(0);MM.fill(0);
+for(let l=0;l<nl;l++){const a=S[l],f=FE[l];for(let c=0;c<n;c++){TT[c]+=a[c];MM[c]+=a[c]*f}Dl[l].fill(0)}
+for(let j=0;j<NR;j++){const nb=DOWN[j];if(nb===-1)continue;const st=STEEP[j];for(let i=0;i<W;i++){const c=j*W+i,t=TT[c];if(t<=.3)continue;const mo=MM[c]/t,th=T0/(1+.15*mo);if(t<=th)continue;
+const f=Math.min(.3,K*mo*st*(t-th)*RATE[c]);if(f<=0)continue;const tc=nb<0?-1:nb*W+i,tl=nb<0?-1:nb*W+((i+LAT[c]+W)%W);
+for(let l=0;l<nl;l++){const amt=S[l][c]*f;Dl[l][c]-=amt;if(tc<0)shelf+=amt;else{Dl[l][tc]+=amt*.6;Dl[l][tl]+=amt*.4}}}}
+for(let l=0;l<nl;l++){const a=S[l],d=Dl[l];for(let c=0;c<n;c++)a[c]+=d[c]}}
+const tc=document.createElement('canvas');tc.width=W;tc.height=NR;const cx=tc.getContext('2d'),img=cx.createImageData(W,NR);
+function paint(rawMix){const d=img.data,cl=CLAYS[clay],GL=layers.map(l=>gk(l.g)),RS=GL.map(resp);
+for(let j=0;j<NR;j++){const yy=NR-1-j;for(let i=0;i<W;i++){const c=j*W+i,vr=VAR[c];let r=cl[1][0],g=cl[1][1],b=cl[1][2];
+for(let l=0;l<S.length;l++){const t=S[l][c];if(t<.02)continue;const q=GL[l],s=Math.min(1,Math.max(0,(t-.35)/2.3+(vr-.5)*.45));
+let cr=q.thin[0]+(q.thick[0]-q.thin[0])*s,cg=q.thin[1]+(q.thick[1]-q.thin[1])*s,cb=q.thin[2]+(q.thick[2]-q.thin[2])*s,op=q.op;
+if(q.fx==='speckle'&&SPK2[c]&&t>.4){cr*=.45;cg*=.42;cb*=.4}const rs=RS[l];if(rs.over>40){const z=Math.min(1,(rs.over-40)/120);op*=1-.5*z;cr*=1-.25*z;cg*=1-.3*z;cb*=1-.3*z}
+const rm=Math.max(rawMix,1-rs.mat);if(rm>0){const rawMix=rm;cr+=(cr*.4+150-cr)*rawMix;cg+=(cg*.4+146-cg)*rawMix;cb+=(cb*.4+140-cb)*rawMix;op+=(.9-op)*rawMix}
+const a=1-Math.exp(-op*t*1.25);r+=(cr-r)*a;g+=(cg-g)*a;b+=(cb-b)*a}
+let k=.95+.1*vr;if(cl[2]&&SPK[c])k*=.55;const o=(yy*W+i)*4;d[o]=r*k;d[o+1]=g*k;d[o+2]=b*k;d[o+3]=255}}
+cx.putImageData(img,0,0);tex.needsUpdate=true}
+// three
+const cv=$('gl'),R3=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R3.setPixelRatio(Math.min(devicePixelRatio,2));R3.outputEncoding=THREE.sRGBEncoding;R3.toneMapping=THREE.ACESFilmicToneMapping;
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(30,1,.1,500);
+const env=new THREE.Scene();env.add(new THREE.Mesh(new THREE.SphereGeometry(50,32,16),new THREE.MeshBasicMaterial({color:0x5e5750,side:THREE.BackSide})));
+[[30,20,-30,20,20,0xffffff],[18,40,35,10,-10,0xfff0dc],[60,10,0,45,0,0xd8d8d8]].forEach(([w,h,x,y,z,c])=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);env.add(m)});
+const pm=new THREE.PMREMGenerator(R3);scene.environment=pm.fromScene(env,.02).texture;
+scene.add(new THREE.HemisphereLight(0xfff6ea,0x3a3029,.35));const key=new THREE.DirectionalLight(0xffffff,1.1);key.position.set(-5,9,7);scene.add(key);
+const tex=new THREE.CanvasTexture(tc);tex.encoding=THREE.sRGBEncoding;tex.wrapS=THREE.RepeatWrapping;tex.anisotropy=4;
+const mat=new THREE.MeshPhysicalMaterial({map:tex,roughness:.85,clearcoat:0,clearcoatRoughness:.12,side:THREE.DoubleSide});
+const pot=new THREE.Mesh(new THREE.BufferGeometry(),mat);scene.add(pot);
+const footMat=new THREE.MeshStandardMaterial({roughness:.95});const foot=new THREE.Mesh(new THREE.CircleGeometry(1,64),footMat);foot.rotation.x=Math.PI/2;foot.position.y=.002;scene.add(foot);
+const sc=document.createElement('canvas');sc.width=sc.height=128;{const x=sc.getContext('2d'),gr=x.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(0,0,0,.38)');gr.addColorStop(.55,'rgba(0,0,0,.12)');gr.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gr;x.fillRect(0,0,128,128)}
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;scene.add(shadow);
+let th=.6,ph=1.12,zoom=1,drag=null;
+function rebuild(){const P=buildPath();pot.geometry.dispose();pot.geometry=new THREE.LatheGeometry(P,W);foot.scale.setScalar(pts[0][0]);footMat.color.setRGB(...CLAYS[clay][1].map(v=>(v/255)**2.2));
+shadow.scale.setScalar(maxR*3.2);if(!RATE)fields();deposit();if(fired&&pdrag<0)fireAnim();else{stepsLeft=0;S=Lraw.map(a=>a.slice());shelf=0;mat.roughness=.85;mat.clearcoat=0;paint(1);status()}dims()}
+function showRaw(){fired=false;stepsLeft=0;S=Lraw.map(a=>a.slice());shelf=0;mat.roughness=.85;mat.clearcoat=0;paint(1);status()}
+function fireAnim(){S=Lraw.map(a=>a.slice());shelf=0;fired=true;stepsLeft=STEPS;status()}
+function surf(){const top=layers.length?gk(layers[layers.length-1].g):null,base=top&&top.fin==='m'?.55:.2;let m=1;for(const l of layers)m=Math.min(m,resp(gk(l.g)).mat);return{r:.85-(.85-base)*m,cc:(top&&top.fin==='m'?.1:.6)*m}}
+function status(){const cn='Cone '+coneOf(TEMP)+' ('+TEMP+' °C)';$('state').textContent=stepsLeft>0?'Brennt … '+cn:pdrag>=0?'Form wird geändert …':fired?'Gebrannt · '+cn+' · Brand '+fSeed:'Roh · noch nicht gebrannt';const w=$('warn');
+let footT=0;if(fired&&!stepsLeft)for(let j=0;j<NR&&Y[j]<.22;j++)for(let i=0;i<W;i++)for(const a of S)footT=Math.max(footT,a[j*W+i]);
+let tot=0;if(fired&&!stepsLeft)for(const a of Lraw)for(const v of a)tot+=v;
+const bad=layers.map(l=>gk(l.g)).filter(g=>rstate(g)!=='ok'),bt=bad.length?' '+bad.map(g=>g.c+' '+rstate(g)).join(', ')+'.':'';
+if(fired&&!stepsLeft&&shelf>tot*.003){w.hidden=false;w.textContent='Achtung: Glasur ist bis auf die Brennplatte gelaufen.'+(bad.length?bt:' Weniger Flux oder Flux höher ansetzen.')}
+else if(fired&&!stepsLeft&&footT>.6){w.hidden=false;w.textContent='Knapp: Die Glasur läuft bis an den Fuss.'+bt}
+else if(fired&&!stepsLeft&&bad.length){w.hidden=false;w.textContent='Ausserhalb des Brennbereichs:'+bt}else w.hidden=true}
+function camUpdate(){const d=Math.max(Hc*1.15,maxR*2.4)*2.2/zoom,ty=Hc*.45;cam.position.set(d*Math.sin(ph)*Math.sin(th),ty+d*Math.cos(ph),d*Math.sin(ph)*Math.cos(th));cam.lookAt(0,ty,0)}
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function loop(){if(!drag&&!reduce)th+=.0025;if(stepsLeft>0){for(let k=0;k<4&&stepsLeft>0;k++,stepsLeft--)step();const p=1-stepsLeft/STEPS,sf=surf();mat.roughness=.85-(.85-sf.r)*p;mat.clearcoat=sf.cc*p;paint(1-p);if(!stepsLeft)status()}
+camUpdate();R3.render(scene,cam);requestAnimationFrame(loop)}
+const ro=new ResizeObserver(()=>{const w=cv.clientWidth,h=cv.clientHeight;R3.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()});ro.observe(cv);
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag)return;th-=(e.clientX-drag.x)*.008;ph=Math.min(1.5,Math.max(.25,ph-(e.clientY-drag.y)*.006));drag={x:e.clientX,y:e.clientY}});
+cv.addEventListener('pointerup',()=>drag=null);cv.addEventListener('pointercancel',()=>drag=null);
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.min(2.5,Math.max(.6,zoom*(e.deltaY<0?1.08:.93)))},{passive:false});
+// profile editor
+const pe=$('pe'),pc=pe.getContext('2d');let ps=1,pcx=0,pby=0,pdrag=-1,extH=10,extR=5;
+function setExt(){extH=Math.max(...pts.map(p=>p[1]))+2;extR=Math.max(...pts.map(p=>p[0]))+1.5}
+function drawPE(){const w=pe.clientWidth,h=pe.clientHeight,dpr=devicePixelRatio||1;pe.width=w*dpr;pe.height=h*dpr;pc.setTransform(dpr,0,0,dpr,0,0);
+ps=Math.min((w-24)/(2*extR),(h-28)/extH);pcx=w/2;pby=h-14;const cs=getComputedStyle(document.body),ink=cs.color,mute=cs.getPropertyValue('--mute'),acc=cs.getPropertyValue('--acc');
+pc.clearRect(0,0,w,h);pc.strokeStyle=mute;pc.setLineDash([3,4]);pc.beginPath();pc.moveTo(pcx,6);pc.lineTo(pcx,h-6);pc.stroke();pc.setLineDash([]);
+const o=catmull(pts,16);pc.beginPath();o.forEach((p,k)=>pc[k?'lineTo':'moveTo'](pcx+p[0]*ps,pby-p[1]*ps));for(let k=o.length-1;k>=0;k--)pc.lineTo(pcx-o[k][0]*ps,pby-o[k][1]*ps);pc.closePath();
+pc.fillStyle=getComputedStyle(document.querySelector('.stage')).getPropertyValue('--stage');pc.fill();pc.strokeStyle=ink;pc.lineWidth=1.5;pc.stroke();
+pts.forEach(p=>{pc.beginPath();pc.arc(pcx+p[0]*ps,pby-p[1]*ps,7,0,7);pc.fillStyle=acc;pc.fill()})}
+function pePos(e){const b=pe.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]}
+let raf=0;const later=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;rebuild()})};
+pe.addEventListener('pointerdown',e=>{const[x,y]=pePos(e);let best=-1,bd=24;pts.forEach((p,k)=>{const d=Math.hypot(pcx+p[0]*ps-x,pby-p[1]*ps-y);if(d<bd){bd=d;best=k}});if(best>=0){pdrag=best;pe.setPointerCapture(e.pointerId)}});
+pe.addEventListener('pointermove',e=>{if(pdrag<0)return;const[x,y]=pePos(e),k=pdrag;pts[k][0]=Math.min(14,Math.max(1,(x-pcx)/ps));
+if(k>0){const lo=pts[k-1][1]+.4,hi=k<pts.length-1?pts[k+1][1]-.4:30;pts[k][1]=Math.min(hi,Math.max(lo,(pby-y)/ps))}shapeName='';chips();drawPE();later()});
+const peEnd=()=>{if(pdrag<0)return;pdrag=-1;setExt();drawPE();rebuild()};pe.addEventListener('pointerup',peEnd);pe.addEventListener('pointercancel',peEnd);
+new ResizeObserver(drawPE).observe(pe);
+function dims(){$('dims').textContent=`Höhe ${Hc.toFixed(1).replace('.',',')} cm · Ø Rand ${(pts[pts.length-1][0]*2).toFixed(1).replace('.',',')} cm · Ø Fuss ${(pts[0][0]*2).toFixed(1).replace('.',',')} cm`}
+// UI
+function chips(){$('presets').innerHTML=Object.keys(PRESETS).map(n=>`<button data-p="${n}" aria-pressed="${n===preset}">${n}</button>`).join('');
+$('shapes').innerHTML=Object.keys(SHAPES).map(n=>`<button data-s="${n}" aria-pressed="${n===shapeName}">${n}</button>`).join('');
+$('clays').innerHTML=CLAYS.map((c,k)=>`<button data-c="${k}" aria-pressed="${k===clay}">${c[0]}</button>`).join('')}
+const rng=g=>g.t[0]+'–'+g.t[1]+' °C';
+const STL={ok:'passt',roh:'zu kalt – bleibt roh',unterbrannt:'unterbrannt',überbrannt:'überbrannt','stark überbrannt':'stark überbrannt – läuft'};
+function renderLayers(){$('layers').innerHTML=layers.map((ly,k)=>{const g=gk(ly.g),s=g.thick,st=rstate(g);return`<li><span class="sw" style="background:rgb(${s.join(',')})"></span>
+<button class="gbtn" data-pick="${k}" aria-label="Glasur für Schicht ${k+1} wählen">${esc(g.b)} ${esc(g.c)} ${esc(g.n)}<small>${esc(g.l)} · <span class="rng${st==='ok'?'':' bad'}">${rng(g)} · ${STL[st]}</span></small></button>
+<button class="del" data-del="${k}" aria-label="Schicht ${k+1} entfernen">✕</button>
+<div class="row2"><select data-k="${k}" data-f="area" aria-label="Bereich">${AREAS.map(a=>`<option value="${a[0]}"${a[0]===ly.area?' selected':''}>${a[1]}</option>`).join('')}</select>
+<div class="seg" role="group" aria-label="Schichten">${[1,2,3].map(n=>`<button data-k="${k}" data-coats="${n}" aria-pressed="${n===ly.coats}">${n}×</button>`).join('')}</div></div></li>`}).join('');
+$('add').disabled=layers.length>=6;
+$('recipe').textContent=layers.map((ly,k)=>{const g=gk(ly.g);return`${k+1}. ${ly.coats}× ${g.b} ${g.c} ${g.n} – ${AREAS.find(a=>a[0]===ly.area)[1]}`}).join('\n')+`\nTon: ${CLAYS[clay][0]} · Fuss 0,5 cm wachsen · ${TEMP} °C (≈ Cone ${coneOf(TEMP)}), Oxidation`}
+function info(g){$('ginfo').textContent=`${g.n} (${g.b} ${g.c}${g.de?', '+g.de:''}): `+(g.info||`${g.l}, Brennbereich ${rng(g)}. Farbe ${g.src==='h'?'nach Herstellerbeschreibung eingestellt':'aus dem Namen geschätzt'}.`)}
+function changed(){preset='';chips();renderLayers();rebuild()}
+function setTemp(t,go){TEMP=t;$('temp').value=t;$('tval').textContent=t+' °C';$('tcone').textContent='≈ Cone '+coneOf(t);
+$('tpre').innerHTML=TPRE.map(p=>`<button data-t="${p[1]}" aria-pressed="${p[1]===t}">${p[0]}</button>`).join('');
+$('tinfo').textContent=t<1000?'Raku/Niedrigbrand: nur Raku- und Glimmerglasuren schmelzen.':t<=1080?'Irdenware: Niedrigbrand-Glasuren (Cone 06–04) schmelzen, Steinzeugglasuren bleiben roh.':t<1180?'Zwischenbereich: Irdenware-Glasuren laufen bereits stark, Steinzeug ist noch unterbrannt.':'Steinzeug: Mid-/High-Fire-Glasuren schmelzen, Irdenware-Glasuren laufen ab.';
+renderLayers();if(go)rebuild()}
+let tdeb=0;$('temp').addEventListener('input',e=>{setTemp(+e.target.value,false);clearTimeout(tdeb);tdeb=setTimeout(()=>{fired=true;rebuild()},250)});
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+if(d.p){preset=d.p;layers=PRESETS[d.p].map(o=>({...o}));chips();renderLayers();rebuild();fireAnim()}
+else if(d.s){shapeName=d.s;pts=SHAPES[d.s].map(p=>p.slice());setExt();chips();drawPE();rebuild()}
+else if(d.c){clay=+d.c;chips();renderLayers();rebuild()}
+else if(d.t){fired=true;setTemp(+d.t,true)}
+else if(d.coats){layers[+d.k].coats=+d.coats;changed()}
+else if(d.del){layers.splice(+d.del,1);changed()}
+else if(d.pick){openPick(+d.pick)}
+else if(d.g!==undefined&&pickK!==null){const g=gk(d.g);if(pickK<0)layers.push({g:g.k,coats:2,area:'all',seed:(Math.random()*1e6)|0});else layers[pickK].g=g.k;$('pick').close();info(g);changed()}
+else if(d.br!==undefined){pBrand=d.br;plist()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.id==='pfit'){plist();return}if(!t.dataset.f)return;layers[+t.dataset.k][t.dataset.f]=t.value;changed()});
+// Picker
+let pickK=null,pBrand='';
+function openPick(k){pickK=k;$('q').value='';plist();const dl=$('pick');try{dl.showModal()}catch(_){dl.setAttribute('open','')}setTimeout(()=>$('q').focus(),50)}
+function plist(){const q=$('q').value.trim().toLowerCase(),fit=$('pfit').checked;
+$('pbrands').innerHTML=[['','Alle'],['Mayco','Mayco'],['Amaco','Amaco'],['Botz','Botz']].map(b=>`<button data-br="${b[0]}" aria-pressed="${b[0]===pBrand}">${b[1]}</button>`).join('');
+const r=G.filter(g=>(!pBrand||g.b===pBrand)&&(!fit||rstate(g)==='ok')&&(!q||(g.b+' '+g.c+' '+g.n+' '+(g.de||'')+' '+g.l).toLowerCase().includes(q)));
+$('plist').innerHTML=r.slice(0,300).map(g=>`<button data-g="${esc(g.k)}"><span class="sw" style="background:rgb(${g.thick.join(',')})"></span><span>${esc(g.c)} ${esc(g.n)}${g.de?' · '+esc(g.de):''}<small>${esc(g.b)} · ${esc(g.l)}${g.src==='h'?'':' · Farbe geschätzt'}</small></span><em>${rng(g)}</em></button>`).join('')||'<p class="hint">Keine Glasur gefunden. Filter „nur passend“ abschalten?</p>';
+$('pcount').textContent=r.length+' von '+G.length+' Glasuren'+(r.length>300?' · erste 300 angezeigt':'')}
+$('q').addEventListener('input',plist);$('pclose').onclick=()=>$('pick').close();
+$('add').onclick=()=>openPick(-1);
+$('fire').onclick=fireAnim;$('raw').onclick=showRaw;$('reroll').onclick=()=>{fSeed++;fields();fireAnim()};
+$('copy').onclick=async()=>{try{if(window.Android)Android.copy($('recipe').textContent);else await navigator.clipboard.writeText($('recipe').textContent);$('copy').textContent='Kopiert'}catch(_){$('copy').textContent='Bitte manuell markieren'}setTimeout(()=>$('copy').textContent='Text kopieren',1600)};
+
+// Export
+const clean=t=>String(t).replace(/≈/g,'ca.').replace(/[–—]/g,'-').replace(/[^\x00-\xFF]/g,'');
+function finish(){if(stepsLeft>0){while(stepsLeft>0){step();stepsLeft--}const sf=surf();mat.roughness=sf.r;mat.clearcoat=sf.cc;paint(0);status()}}
+function shot(angle,size){const w0=cv.clientWidth,h0=cv.clientHeight,th0=th,ph0=ph,z0=zoom;R3.setPixelRatio(1);R3.setSize(size,size,false);cam.aspect=1;cam.updateProjectionMatrix();th=angle;ph=1.12;zoom=1;camUpdate();R3.render(scene,cam);
+const c=document.createElement('canvas');c.width=c.height=size;const x=c.getContext('2d'),g=x.createRadialGradient(size/2,size*.35,0,size/2,size*.35,size*.8);g.addColorStop(0,'#eee9e1');g.addColorStop(1,'#d2cbbf');x.fillStyle=g;x.fillRect(0,0,size,size);x.drawImage(cv,0,0,size,size);
+th=th0;ph=ph0;zoom=z0;R3.setPixelRatio(Math.min(devicePixelRatio,2));R3.setSize(w0,h0,false);cam.aspect=w0/h0;cam.updateProjectionMatrix();return c.toDataURL('image/jpeg',.9)}
+function amounts(){const ca=new Float32Array(NR);for(let j=0;j<NR;j++)ca[j]=2*Math.PI*RR[j]/W*DS;
+return layers.map((ly,l)=>{let a=0,v=0;const L=Lraw[l];for(let j=0;j<NR;j++){let s=0,cov=0;for(let i=0;i<W;i++){const t=L[j*W+i];s+=t;if(t>0)cov++}v+=s*ca[j];a+=cov*ca[j]}return{area:a,ml:v*.015}})}
+const JAR=b=>b==='Botz'?[200,'200-ml-Glas']:[473,'Pint (473 ml)'];
+function buildPDF(){const{jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),M=16,PW=210,CW=PW-2*M;let y=0;
+const T=(t,x,yy,o)=>d.text(clean(t),x,yy,o),sz=(n,b)=>{d.setFontSize(n);d.setFont('helvetica',b?'bold':'normal')};
+const need=h=>{if(y+h>282){d.addPage();y=20}};
+const head=t=>{need(14);y+=4;sz(13,1);d.setTextColor(28,26,23);T(t,M,y);y+=2;d.setDrawColor(220,214,204);d.line(M,y,PW-M,y);y+=6};
+const para=(t,n=10,c=[60,56,50])=>{sz(n);d.setTextColor(...c);for(const ln of d.splitTextToSize(clean(t),CW)){need(5);T(ln,M,y);y+=4.6}};
+finish();const big=shot(th,900),s2=shot(th+2.1,450),s3=shot(th+4.2,450);
+const today=new Date().toLocaleDateString('de-CH');
+sz(22,1);d.setTextColor(28,26,23);T('Glasur-Labor',M,22);sz(10);d.setTextColor(110,104,96);T((preset?'Vorlage '+preset+' · ':'Eigene Kombination · ')+'Simulation vom '+today,M,28);
+d.addImage(big,'JPEG',M,34,120,120);d.addImage(s2,'JPEG',M+124,34,54,54);d.addImage(s3,'JPEG',M+124,100,54,54);y=164;
+head('Brand und Form');const rows=[['Brenntemperatur',TEMP+' °C (ca. Cone '+coneOf(TEMP)+'), Oxidation'],['Ton',CLAYS[clay][0]],['Form',(shapeName||'Eigene Form')+' · '+$('dims').textContent],['Fuss','unten 0,5 cm wachsen, glasurfrei']];
+sz(10);for(const r of rows){need(6);d.setTextColor(110,104,96);T(r[0],M,y);d.setTextColor(28,26,23);T(d.splitTextToSize(clean(r[1]),CW-42)[0],M+42,y);y+=5.6}
+head('Rezept (Schichten von unten nach oben)');
+layers.forEach((ly,k)=>{const g=gk(ly.g);need(11);sz(10,1);d.setTextColor(28,26,23);T(`${k+1}.  ${ly.coats}× ${g.b} ${g.c} ${g.n}`,M,y);sz(9);d.setTextColor(110,104,96);T(`${AREAS.find(a=>a[0]===ly.area)[1]} · ${g.l} · Brennbereich ${rng(g)} · ${STL[rstate(g)]}`,M+6,y+4.4);y+=10});
+head('Materialliste');const am=amounts(),by={};layers.forEach((ly,l)=>{const g=gk(ly.g);(by[g.k]=by[g.k]||{g,ml:0,coats:0,n:0});by[g.k].ml+=am[l].ml;by[g.k].coats+=ly.coats;by[g.k].n++});
+const cols=[M,M+84,M+112,M+138];sz(9,1);d.setTextColor(110,104,96);['Glasur','Menge ca.','Gebinde','reicht für ca.'].forEach((h,i)=>T(h,cols[i],y));y+=5;
+for(const e of Object.values(by)){need(10);const[j,jl]=JAR(e.g.b);sz(10);d.setTextColor(28,26,23);T(d.splitTextToSize(clean(`${e.g.b} ${e.g.c} ${e.g.n}`),80)[0],cols[0],y);const nn=Math.floor(j/Math.max(e.ml,1));T(e.ml<5?'unter 5 ml':Math.round(e.ml)+' ml',cols[1],y);T(jl,cols[2],y);T(nn>50?'über 50 Stück':nn+' Stück',cols[3],y);
+sz(8.5);d.setTextColor(110,104,96);T(`${e.n} Schicht${e.n>1?'en':''}, zusammen ${e.coats} Auftr${e.coats>1?'äge':'ag'} · Farbe ${e.g.src==='h'?'nach Herstellerangabe':'geschätzt'}`,cols[0],y+4);y+=9.5}
+const areas=new Set(layers.map(l=>l.area)),tools=['Wachs oder Wax Resist für den Fuss','Weicher Fächerpinsel für flächige Schichten'];
+if(areas.has('all'))tools.push('Tauchgefäss oder grosser Pinsel für die Grundglasur');if(areas.has('dabs'))tools.push('Schwamm oder runder Pinsel für Tupfer');if(areas.has('strokes'))tools.push('Breiter Flachpinsel für Pinselstriche');
+if(layers.some(l=>gk(l.g).fl>=1))tools.push('Glasurteller / Cookie unter dem Stück (Flux läuft)');head('Zubehör');tools.forEach(t=>para('-  '+t));
+const w=$('warn');if(!w.hidden){head('Hinweis aus der Simulation');para(w.textContent,10,[156,58,29])}
+y+=4;para('Mengen sind Richtwerte (ca. 0,15 mm Nassauftrag pro Schicht, berechnet aus der glasierten Fläche). Die Darstellung ist eine Simulation: Farben vieler Glasuren sind aus dem Namen geschätzt, das Fliessverhalten ist modelliert. Vor dem Glasieren eines ganzen Stücks immer Testplättchen auf dem eigenen Ton brennen.',8.5,[110,104,96]);
+return d.output('arraybuffer')}
+$('pdf').onclick=async()=>{const msg=$('pdfmsg'),b=$('pdf');if(!window.jspdf){msg.textContent='PDF-Bibliothek konnte nicht geladen werden.';return}
+if(window.Android){b.disabled=true;msg.textContent='PDF wird erstellt …';try{const data=buildPDF(),name='glasur-rezept-'+(preset||'eigen').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+TEMP+'C.pdf';
+const u=new Uint8Array(data);let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));
+const r=Android.savePdf(btoa(s),name);msg.textContent=r==='ok'?'PDF gespeichert in Downloads: '+name:'Export nicht möglich ('+r+').'}catch(e){msg.textContent='Export nicht möglich.'}finally{b.disabled=false}return}
+let dl=null;try{dl=window.claude&&await window.claude.use('downloads')}catch(_){}if(!dl){b.disabled=true;msg.textContent='PDF wird erstellt …';try{const name='glasur-rezept-'+(preset||'eigen').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+TEMP+'C.pdf',file=new File([buildPDF()],name,{type:'application/pdf'});
+if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Glasur-Rezept'});msg.textContent='PDF geteilt. Tipp: „In Dateien sichern“ legt es ab.'}
+else{const u=URL.createObjectURL(file),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);msg.textContent='PDF heruntergeladen: '+name}}
+catch(e){msg.textContent=e&&e.name==='AbortError'?'Export abgebrochen.':'Export nicht möglich.'}finally{b.disabled=false}return}
+b.disabled=true;msg.textContent='PDF wird erstellt …';try{const data=buildPDF(),name='glasur-rezept-'+(preset||'eigen').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+TEMP+'C.pdf';
+await dl.save({filename:name,data});msg.textContent='PDF gespeichert.'}catch(e){const c=e&&e.code;msg.textContent=c==='declined'?'Export abgebrochen.':c==='host_unavailable'?'Diese App kann keine Dateien speichern – bitte im Browser oder am Computer öffnen.':c==='rate_limited'?'Bitte kurz warten und nochmals versuchen.':'Export nicht möglich'+(c?' ('+c+')':'')+'.'}finally{b.disabled=false}};
+info(gk('Mayco|SW-122'));
+fetch('glazes.json').then(r=>r.json()).then(d=>{if(!Array.isArray(d))return;const keep=new Set(CORE.map(g=>g.k));G=CORE.concat(d.filter(g=>g&&g.k&&!keep.has(g.k)&&Array.isArray(g.thick)&&Array.isArray(g.thin)&&Array.isArray(g.t)));index();renderLayers()}).catch(()=>{$('dbnote').textContent+=' (Datenbank konnte nicht geladen werden – nur Grundauswahl verfügbar.)'});
+setExt();chips();setTemp(1222,false);rebuild();fireAnim();loop();
+if('serviceWorker' in navigator&&isSecureContext)navigator.serviceWorker.register('sw.js').catch(()=>{});
+}</script></body></html>
